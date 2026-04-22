@@ -115,3 +115,48 @@ exports.obtenerTodos = asyncHandler(async (req, res) => {
     usuarios,
   });
 });
+
+exports.actualizar = asyncHandler(async (req, res) => {
+  const { nombre, email, rol } = req.body;
+  
+  const usuario = await User.findById(req.params.id);
+  
+  if (!usuario) {
+    return res.status(404).json({
+      success: false,
+      mensaje: 'Usuario no encontrado',
+    });
+  }
+
+  if (nombre) usuario.nombre = nombre;
+  if (email) usuario.email = email;
+  if (rol) usuario.rol = rol;
+
+  await usuario.save();
+
+  res.status(200).json({
+    success: true,
+    mensaje: 'Usuario actualizado exitosamente',
+    usuario,
+  });
+});
+
+exports.eliminar = asyncHandler(async (req, res) => {
+  const usuario = await User.findById(req.params.id);
+
+  if (!usuario) {
+    return res.status(404).json({
+      success: false,
+      mensaje: 'Usuario no encontrado',
+    });
+  }
+
+  await User.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    mensaje: 'Usuario eliminado exitosamente',
+  });
+
+  console.log(colors.red(`✓ Usuario eliminado: ${usuario.email}`));
+});
