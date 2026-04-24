@@ -23,7 +23,7 @@ app.use('/api/usuarios', userRoutes);
 app.use('/api/telefonos', phoneRoutes);
 app.use('/api/productos', productoRoutes);
 
-app.get('/api/salud', (req, res) => {
+app.get('/api/salud', (req, res, next) => {
   res.status(200).json({
     success: true,
     mensaje: 'Servidor funcionando correctamente',
@@ -31,7 +31,7 @@ app.get('/api/salud', (req, res) => {
   });
 });
 
-app.use((req, res) => {
+app.use((req, res, next) => {
   res.status(404).json({
     success: false,
     mensaje: 'Ruta no encontrada',

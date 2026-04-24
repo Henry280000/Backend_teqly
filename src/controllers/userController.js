@@ -1,4 +1,3 @@
-const asyncHandler = require('express-async-handler');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { JWT_SECRET, JWT_EXPIRE } = require('../config/environment');
@@ -9,7 +8,7 @@ const generarToken = (id, rol) => {
   return jwt.sign({ id, rol }, JWT_SECRET, { expiresIn: JWT_EXPIRE });
 };
 
-exports.registro = asyncHandler(async (req, res) => {
+exports.registro = async (req, res, next) => {
   const { nombre, email, contraseña } = req.body;
 
   if (!nombre || !email || !contraseña) {
@@ -43,9 +42,9 @@ exports.registro = asyncHandler(async (req, res) => {
   });
 
   console.log(colors.green(`✓ Nuevo usuario: ${email}`));
-});
+};
 
-exports.login = asyncHandler(async (req, res) => {
+exports.login = async (req, res, next) => {
   const { email, contraseña } = req.body;
 
   if (!email || !contraseña) {
@@ -88,9 +87,9 @@ exports.login = asyncHandler(async (req, res) => {
   });
 
   console.log(colors.green(`✓ Sesión iniciada: ${email}`));
-});
+};
 
-exports.miPerfil = asyncHandler(async (req, res) => {
+exports.miPerfil = async (req, res, next) => {
   const usuario = await User.findById(req.usuario.id);
 
   if (!usuario) {
@@ -104,9 +103,9 @@ exports.miPerfil = asyncHandler(async (req, res) => {
     success: true,
     usuario,
   });
-});
+};
 
-exports.obtenerTodos = asyncHandler(async (req, res) => {
+exports.obtenerTodos = async (req, res, next) => {
   const usuarios = await User.find();
 
   res.status(200).json({
@@ -114,49 +113,46 @@ exports.obtenerTodos = asyncHandler(async (req, res) => {
     total: usuarios.length,
     usuarios,
   });
-});
+};
 
-exports.actualizar = asyncHandler(async (req, res) => {
+exports.actualizar = async (req, res) => {
   const { nombre, email, rol } = req.body;
-  
-  const usuario = await User.findById(req.params.id);
-  
-  if (!usuario) {
-    return res.status(404).json({
-      success: false,
-      mensaje: 'Usuario no encontrado',
-    });
+  const usuarioId = req.params.id;
+
+  if (req.usuario.id !== usuarioId && req.usuario.rol !== 'admin') {
+    return res.status(403).json({ success: false, mensaje: 'No puedes actualizar el perfil de otro usuario' });
   }
 
-  if (nombre) usuario.nombre = nombre;
-  if (email) usuario.email = email;
-  if (rol) usuario.rol = rol;
+  const camposActualizar = {};
+  if (nombre) camposActualizar.nombre = nombre;
+  if (email) camposActualizar.email = email;
+  if (rol && req.usuario.rol === 'admin') camposActualizar.rol = rol;
 
-  await usuario.save();
-
-  res.status(200).json({
-    success: true,
-    mensaje: 'Usuario actualizado exitosamente',
-    usuario,
-  });
-});
-
-exports.eliminar = asyncHandler(async (req, res) => {
-  const usuario = await User.findById(req.params.id);
+  const usuario = await User.findByIdAndUpdate(
+    usuarioId,
+    camposActualizar,
+    { new: true, runValidators: true }
+  );
 
   if (!usuario) {
-    return res.status(404).json({
-      success: false,
-      mensaje: 'Usuario no encontrado',
-    });
+    return res.status(404).json({ success: false, mensaje: 'Usuario no encontrado' });
   }
 
-  await User.findByIdAndDelete(req.params.id);
+  res.status(200).json({ success: true, mensaje: 'Usuario actualizado exitosamente', usuario });
+};
 
-  res.status(200).json({
-    success: true,
-    mensaje: 'Usuario eliminado exitosamente',
-  });
-
-  console.log(colors.red(`✓ Usuario eliminado: ${usuario.email}`));
-});
+exports.eliminar = async (req, res, next) => {
+  try {
+    const usuarioId = req.params.id;
+    if (req.usuario.id !== usuarioId && req.usuario.rol !== 'admin') {
+      return res.status(403).json({ success: false, mensaje: 'No puedes eliminar la cuenta de otro usuario' });
+    }
+    const usuario = await User.findById(usuarioId);
+    if (!usuario) {
+      return res.status(404).json({ success: false, mensaje: 'Usuario no encontrado' });
+    }
+    await User.findByIdAndDelete(usuarioId);
+    res.status(200).json({ success: true, mensaje: 'Usuario eliminado exitosamente' });
+    console.log(colors.red(`✓ Usuario eliminado: ${usuario.email}`));
+  } catch (err) { next(err); }
+};

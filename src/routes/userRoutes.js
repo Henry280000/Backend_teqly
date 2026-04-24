@@ -7,7 +7,7 @@ router.post('/registro', registro);
 router.post('/login', login);
 router.get('/miPerfil', protect, miPerfil);
 router.get('/', protect, admin, obtenerTodos);
-router.put('/:id', protect, admin, actualizar);
-router.delete('/:id', protect, admin, eliminar);
+router.put('/:id', protect, actualizar);
+router.delete('/:id', protect, eliminar);
 
 module.exports = router;
