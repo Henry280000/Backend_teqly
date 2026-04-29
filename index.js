@@ -10,6 +10,14 @@ const { PORT, NODE_ENV, CORS_ORIGIN } = require('./src/config/environment');
 const userRoutes = require('./src/routes/userRoutes');
 const phoneRoutes = require('./src/routes/phoneRoutes');
 const productoRoutes = require('./src/routes/productoRoutes');
+const smartSearchRoutes = require('./src/routes/smartSearchRoutes');
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://backend-teqly.onrender.com',
+  CORS_ORIGIN,
+].filter(Boolean);
+
+
 
 connectDB();
 
@@ -17,11 +25,24 @@ const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
+  credentials: true,
+}));
+
+
 
 app.use('/api/usuarios', userRoutes);
 app.use('/api/telefonos', phoneRoutes);
 app.use('/api/productos', productoRoutes);
+app.use('/api/smart', smartSearchRoutes);
+
 
 app.get('/api/salud', (req, res, next) => {
   res.status(200).json({
