@@ -13,6 +13,7 @@ const productoRoutes = require('./src/routes/productoRoutes');
 const smartSearchRoutes = require('./src/routes/smartSearchRoutes');
 const allowedOrigins = [
   'http://localhost:5173',
+  'https://teqly.netlify.app',
   'https://backend-teqly.onrender.com',
   CORS_ORIGIN,
 ].filter(Boolean);
