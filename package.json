@@ -13,6 +13,7 @@
     "migrate:auto": "node scripts/migrateData.js",
     "migrate:dis": "node scripts/migrar-dis.js",
     "migrate:todas": "node scripts/migrar-todas-categorias.js",
+    "create:admin": "node scripts/crearAdmin.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
